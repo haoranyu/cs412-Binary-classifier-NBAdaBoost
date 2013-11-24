@@ -1,16 +1,12 @@
 #include "NBC.h"
-//#include <boost/algorithm/string.hpp>
-struct dict {  
-    string word;  
-    double likelihood[NUM_CLASS];  
-};  
-
-int sortAccrodingto = 0;
-
-int cmp(dict a, dict b)  {  
-    return a.likelihood[sortAccrodingto] > b.likelihood[sortAccrodingto];  
-}  
-
+string idxMap(string cate){
+	if(cate == "+1"){
+		return "1";
+	}
+	else{
+		return "0";
+	}
+}
 int main(int argc, char* argv[]) {
 
 	NBC nbc;
@@ -22,11 +18,10 @@ int main(int argc, char* argv[]) {
 
 	string trainFile = "data/"+(string)argv[1];
 	string testFile = "data/"+(string)argv[2];
+
 	ofstream classout("word.txt");
 	ifstream train(trainFile.c_str());
 	ifstream test(testFile.c_str());
-
-	
 
 	for(int i = 0; i < NUM_CLASS; i++)
 		nbc.numw_inclass[i] = 0;
@@ -42,7 +37,9 @@ int main(int argc, char* argv[]) {
 			vector<string> words;
 			string cate;
 			linestr >> cate;
-			
+			if(cate == "")break;
+			cate = idxMap(cate);
+			cout<<cate<<endl;
 			string temp;
 			while(linestr >> temp){
 				int pos = temp.find(":");
@@ -73,7 +70,6 @@ int main(int argc, char* argv[]) {
 	}
 	train.close();
 
-
 	if(test.is_open()){
 		string line;
 		int l =-1;
@@ -85,7 +81,9 @@ int main(int argc, char* argv[]) {
 			vector<string> words;
 			string cate;
 			linestr >> cate;
-			
+			if(cate == "")break;
+			cate = idxMap(cate);
+
 			string temp;
 			while(linestr >> temp){
 				int pos = temp.find(":");
@@ -106,29 +104,4 @@ int main(int argc, char* argv[]) {
 	nbc.Train(nbc.trainset, nbc.ltrain);
 	nbc.Test(nbc.testset);
 
-	list<dict> dictList;
-	dict tmp;
-	for (map<string,vector<double> >::iterator it = nbc.pTable.begin(); it!=nbc.pTable.end(); ++it){
-        tmp.word = it->first;
-		for(int i = 0; i < NUM_CLASS; i++){
-			tmp.likelihood[i] = (it->second).at(i);  
-		}
-		dictList.push_back(tmp);
-    }
-
-	for(int j = 0; j < NUM_CLASS; j++){
-		sortAccrodingto = j;
-		cout<<"The top 20 words with the highest likelihood in class "<<j<<" are:"<<endl;
-		dictList.sort(cmp); 
-		int ct = 0;
-		for (list<dict>::iterator it=dictList.begin(); it!=dictList.end(); ++it){
-			cout<<it->word<<":"<<it->likelihood[sortAccrodingto]<<endl;
-			if(ct < 19) {ct++; continue;}
-			break;
-		}
-	}
-
-
-
-	cout<<"The size of test data is "<<nbc.testset.size()<<endl;
 }

@@ -57,14 +57,6 @@ void NBC::Test( vector< vector<string> > & testdata) {
 	for(int i = 0; i < NUM_CLASS; i ++){
 		cout<<"The classification rate for class "<<i<<" is "<<(double)hit_count[i]/(double)real_count[i]<<endl;
 	}
-
-	cout<<"The confusion matrix:"<<endl;
-	for(int i = 0; i < 8; i ++){
-		for(int j = 0; j < 8; j ++){
-			cout<<confusion_matrix[i][j]<<"\t";
-		}
-		cout<<endl;
-	}
 }
 
 int NBC::test(const vector<string> &sample) {

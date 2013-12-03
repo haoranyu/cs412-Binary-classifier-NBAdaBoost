@@ -62,7 +62,6 @@ void NBC::Test( vector< vector<string> > & testdata) {
 		for(int j = 0; j < NUM_CLASS; j ++){
 			rowSum[i] += confusion_matrix[i][j];
 		}
-		cout<<endl;
 	}
 
 	cout<<"The confusion matrix:"<<endl;
@@ -75,21 +74,26 @@ void NBC::Test( vector< vector<string> > & testdata) {
 
 	double 	accuracy = (double)(confusion_matrix[1][1] + confusion_matrix[0][0]) / (double)(confusion_matrix[1][1] + confusion_matrix[0][0] + confusion_matrix[1][0] + confusion_matrix[0][1]), 
 			error = (double)(confusion_matrix[0][1] + confusion_matrix[1][0]) / (double)(confusion_matrix[1][1] + confusion_matrix[0][0] + confusion_matrix[1][0] + confusion_matrix[0][1]), 
-			sensitivity = (double)(confusion_matrix[1][1]) / (double)(confusion_matrix[1][1] + confusion_matrix[1][0]), 
+			sensitivity /*recall*/= (double)(confusion_matrix[1][1]) / (double)(confusion_matrix[1][1] + confusion_matrix[1][0]), 
 			specificity = (double)(confusion_matrix[0][0]) / (double)(confusion_matrix[0][0] + confusion_matrix[0][1]),
-			precision = 0, 
-			f1 = 0,
-			fhalf = 0,
-			f2 = 0;
+			precision = (double)(confusion_matrix[1][1]) / (double)(confusion_matrix[1][1] + confusion_matrix[0][1]);
+	double 	&recall = sensitivity,
+			f1 = 2 * (precision * recall) / (precision + recall),
+			fhalf = (1 + 0.5*0.5) * (precision * recall) / (0.5*0.5 * precision + recall),
+			f2 = (1 + 2*2) * (precision * recall) / (2*2 * precision + recall);
 
-	cout<<"Accuracy: "<<accuracy<<endl;
+//	cout<< accuracy <<" "<< error <<" "<< sensitivity <<" "<< specificity <<endl;
+//	cout<< precision <<" "<< f1 <<" "<< fhalf <<" "<< f2 <<endl;
+
+	cout<<"Accuracy: "<<accuracy<<"\t\t";
 	cout<<"Error Rate: "<<error<<endl;
-	cout<<"Sensitivity: "<<sensitivity<<endl;
+	cout<<"Sensitivity: "<<sensitivity<<"\t";
 	cout<<"Specificity: "<<specificity<<endl;
-	cout<<"Precision: "<<precision<<endl;
+	cout<<"Precision: "<<precision<<"\t\t";
 	cout<<"F-1 Score: "<<f1<<endl;
-	cout<<"F-0.5 Score: "<<fhalf<<endl;
+	cout<<"F-0.5 Score: "<<fhalf<<"\t";
 	cout<<"F-2 Score: "<<f2<<endl;
+
 }
 
 int NBC::test(const vector<string> &sample) {

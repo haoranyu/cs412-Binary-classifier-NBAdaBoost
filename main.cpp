@@ -41,7 +41,6 @@ int main(int argc, char* argv[]) {
 			string cate;
 			linestr >> cate;
 			cate = mapIdx(cate);
-			//cout<<cate<<endl;
 			string temp;
 			while(linestr >> temp){
 				int pos = temp.find(":");

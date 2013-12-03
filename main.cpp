@@ -1,25 +1,28 @@
 #include "NBC.h"
-string idxMap(string cate){
-	if(cate == "+1"){
+string mapIdx(string str){
+	if(str == "-1"){
+		return "0";
+	}
+	else if(str == "+1"){
 		return "1";
 	}
 	else{
-		return "0";
+		return str;
 	}
 }
+
 int main(int argc, char* argv[]) {
 
 	NBC nbc;
 
 	if (argc != 3){
-		cout<< "Use format: ./NaiveBayes training_file test_file" << endl;
-		exit(1);
+			cout<< "Use format: ./NaiveBayes training_file test_file" << endl;
+			exit(1);
 	}
 
 	string trainFile = "data/"+(string)argv[1];
 	string testFile = "data/"+(string)argv[2];
 
-	ofstream classout("word.txt");
 	ifstream train(trainFile.c_str());
 	ifstream test(testFile.c_str());
 
@@ -37,9 +40,8 @@ int main(int argc, char* argv[]) {
 			vector<string> words;
 			string cate;
 			linestr >> cate;
-			if(cate == "")break;
-			cate = idxMap(cate);
-			cout<<cate<<endl;
+			cate = mapIdx(cate);
+			//cout<<cate<<endl;
 			string temp;
 			while(linestr >> temp){
 				int pos = temp.find(":");
@@ -70,6 +72,7 @@ int main(int argc, char* argv[]) {
 	}
 	train.close();
 
+
 	if(test.is_open()){
 		string line;
 		int l =-1;
@@ -81,9 +84,7 @@ int main(int argc, char* argv[]) {
 			vector<string> words;
 			string cate;
 			linestr >> cate;
-			if(cate == "")break;
-			cate = idxMap(cate);
-
+			cate = mapIdx(cate);
 			string temp;
 			while(linestr >> temp){
 				int pos = temp.find(":");
@@ -103,5 +104,4 @@ int main(int argc, char* argv[]) {
 	// Start Training Naive Baysian Classifier
 	nbc.Train(nbc.trainset, nbc.ltrain);
 	nbc.Test(nbc.testset);
-
 }

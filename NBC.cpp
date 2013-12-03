@@ -1,6 +1,4 @@
 #include "NBC.h"
-
-
 void NBC::Train( vector< vector<string> > & traindata, vector<int> & ltrain)
 {
 	int train_size = ltrain.size();
@@ -40,23 +38,58 @@ void NBC::Train( vector< vector<string> > & traindata, vector<int> & ltrain)
 
 void NBC::Test( vector< vector<string> > & testdata) {
 	int test_size = testdata.size();
-	int hit_count[NUM_CLASS] = {0,0};
-	int real_count[NUM_CLASS] = {0,0};
-	int confusion_matrix[NUM_CLASS][NUM_CLASS] = {{0,0},{0,0}};
+	int confusion_matrix[NUM_CLASS][NUM_CLASS];
+
+	for(int i = 0; i < NUM_CLASS; i++){
+		for(int j = 0; j < NUM_CLASS; j++){
+			confusion_matrix[i][j] = 0;
+		}
+	}
 
 	for (int s = 0; s < test_size; s++) {
 		int plabel = test(testdata[s]);
 		this->pltest.push_back(plabel);
-		real_count[ltest.at(s)]++;
-		if(plabel == ltest.at(s)){
-			hit_count[ltest.at(s)]++;
-		}
 		confusion_matrix[ltest.at(s)][plabel]++;
 	}
 	
+	int rowSum[NUM_CLASS];
+
 	for(int i = 0; i < NUM_CLASS; i ++){
-		cout<<"The classification rate for class "<<i<<" is "<<(double)hit_count[i]/(double)real_count[i]<<endl;
+		rowSum[i] = 0;
 	}
+
+	for(int i = 0; i < NUM_CLASS; i ++){
+		for(int j = 0; j < NUM_CLASS; j ++){
+			rowSum[i] += confusion_matrix[i][j];
+		}
+		cout<<endl;
+	}
+
+	cout<<"The confusion matrix:"<<endl;
+	for(int i = 0; i < NUM_CLASS; i ++){
+		for(int j = 0; j < NUM_CLASS; j ++){
+			cout<<confusion_matrix[i][j]<<"\t";
+		}
+		cout<<endl;
+	}
+
+	double 	accuracy = (double)(confusion_matrix[1][1] + confusion_matrix[0][0]) / (double)(confusion_matrix[1][1] + confusion_matrix[0][0] + confusion_matrix[1][0] + confusion_matrix[0][1]), 
+			error = (double)(confusion_matrix[0][1] + confusion_matrix[1][0]) / (double)(confusion_matrix[1][1] + confusion_matrix[0][0] + confusion_matrix[1][0] + confusion_matrix[0][1]), 
+			sensitivity = (double)(confusion_matrix[1][1]) / (double)(confusion_matrix[1][1] + confusion_matrix[1][0]), 
+			specificity = (double)(confusion_matrix[0][0]) / (double)(confusion_matrix[0][0] + confusion_matrix[0][1]),
+			precision = 0, 
+			f1 = 0,
+			fhalf = 0,
+			f2 = 0;
+
+	cout<<"Accuracy: "<<accuracy<<endl;
+	cout<<"Error Rate: "<<error<<endl;
+	cout<<"Sensitivity: "<<sensitivity<<endl;
+	cout<<"Specificity: "<<specificity<<endl;
+	cout<<"Precision: "<<precision<<endl;
+	cout<<"F-1 Score: "<<f1<<endl;
+	cout<<"F-0.5 Score: "<<fhalf<<endl;
+	cout<<"F-2 Score: "<<f2<<endl;
 }
 
 int NBC::test(const vector<string> &sample) {

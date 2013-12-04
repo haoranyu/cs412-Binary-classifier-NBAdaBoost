@@ -19,7 +19,7 @@ class NBC
 	public:
 		
 		void Train(vector< vector<string> > & traindata,  vector<int> & ltrain);
-		void Test( vector< vector<string> > & testdata); 
+		void Test( vector< vector<string> > & testdata, vector<int> & ltest); 
 		int test(const vector<string> &sample);
 
 

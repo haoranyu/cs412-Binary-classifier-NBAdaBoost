@@ -102,5 +102,6 @@ int main(int argc, char* argv[]) {
 
 	// Start Training Naive Baysian Classifier
 	nbc.Train(nbc.trainset, nbc.ltrain);
-	nbc.Test(nbc.testset);
+	nbc.Test(nbc.trainset, nbc.ltrain);
+	nbc.Test(nbc.testset, nbc.ltest);
 }

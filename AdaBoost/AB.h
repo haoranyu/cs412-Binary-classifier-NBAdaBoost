@@ -19,6 +19,10 @@ class AB
 	public:
 		
 		void Train(vector< vector<string> > & traindata,  vector<int> & ltrain);
+
+		void Sample();
+		void normalize(); 
+
 		void Test( vector< vector<string> > & testdata, vector<int> & ltest); 
 		int test(const vector<string> &sample);
 
@@ -26,6 +30,13 @@ class AB
 		vector< vector<string> >	trainset, testset ;
 
 		vector<int> ltrain, ltest, pltest;
+
+		vector< vector<string> >	sampleset;
+		vector<int> lsample;
+		vector<int> sample_map;
+		vector<double> weight;
+
+
 		map<string, vector<double> > pTable;
 		map<string, vector<int> > features;
 		

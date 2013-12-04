@@ -71,7 +71,6 @@ int main(int argc, char* argv[]) {
 	}
 	train.close();
 
-
 	if(test.is_open()){
 		string line;
 		int l =-1;
@@ -100,8 +99,39 @@ int main(int argc, char* argv[]) {
 	}
 	test.close();
 
+	// initialize weight
+	for(int i = 0; i < ab.trainset.size(); i++)
+		ab.weight.push_back(1.0f/(double)(ab.trainset.size()));
+
+	cout<<ab.weight.at(0)<<endl;
+
 	// Start Training Naive Baysian Classifier
-	ab.Train(ab.trainset, ab.ltrain);
+	for(int r = 0; r < 10; r++){
+		cout<<"Round "<<r<<endl;
+		ab.Sample();
+		ab.Train(ab.sampleset, ab.lsample);
+		double error = 0.0f;
+		vector<int> temp;
+		for (int s = 0; s < ab.sampleset.size(); s++) {
+			int plabel = ab.test(ab.sampleset.at(s));
+			if(plabel != ab.lsample.at(s)){
+				error += ab.weight.at(ab.sample_map.at(s));
+			}
+			else{
+				temp.push_back(ab.sample_map.at(s));
+			}
+		}
+		cout<<"Error rate:"<<error<<endl;
+		if(error > 0.5){
+			r--;
+			error = 0.0;
+			continue;
+		}
+		for(int t = 0; t < temp.size(); t++){
+			ab.weight.at(temp.at(t)) = error / (1.0-error);
+		}
+		ab.normalize();
+	}
 	ab.Test(ab.trainset, ab.ltrain);
 	ab.Test(ab.testset, ab.ltest);
 }

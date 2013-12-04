@@ -98,6 +98,36 @@ void AB::Test( vector< vector<string> > & testdata, vector<int> & ltest) {
 */
 }
 
+void AB::Sample() {
+	double 	n = 0.0f, 
+			rn = 0.0f;
+	for (int i = 0; i < trainset.size(); i++){
+		srand( (unsigned)time( NULL ) );
+		rn = rand() / double(RAND_MAX);
+		n = 0;
+		for (int j =0; j < trainset.size(); j++) {
+			n += weight.at(j);
+			if (n > rn) {
+				sampleset.push_back(trainset.at(j));
+				lsample.push_back(ltrain.at(j));
+				sample_map.push_back(j);
+				break;
+			}
+		}
+    } 
+}
+
+void AB::normalize() {
+	double total_weight = 0.0f;
+	for(int i= 0 ;i < weight.size(); i++){
+		total_weight += weight.at(i);
+	}
+	cout<<"total_weight is :"<< total_weight <<endl;
+	for(int i= 0 ;i < weight.size(); i++){
+		weight.at(i) = weight.at(i) / total_weight;
+	}
+}
+
 int AB::test(const vector<string> &sample) {
 
     vector<double> posterior;

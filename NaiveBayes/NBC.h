@@ -10,30 +10,31 @@
 #include <iostream>
 #include <iomanip>	
 #include <map>
-#include <list>
 using namespace std;
 
 class NBC {
 	public:
 		NBC(string name);
-		void train(const vector< vector<int> > & traindata, const vector<int> & trainlabel);
+		void train(const vector< vector<int> > & traindata, const vector<int> & train_label);
 		void test(const vector< vector<int> > & testdata);
 		void getTrainData(string path);
 		void getTestData(string path);
 		void printBasic(const vector<int> & label);
 		void printDetail(const vector<int> & label);
-		
+		void printPtable();
+
 		vector< vector<int> >	trainset, testset;
-		vector<int> trainlabel, testlabel, result;
-		
+		vector<int> train_label, test_label;
+
 	private:
-		int judge(const vector<int> &sample);
 		void calcuateMatrix(const vector<int> & label);
+		int judge(const vector<int> &sample);
 		int featureSize;
 		int matrix[2][2];
-		map<int, map<int, double> > pcp, ncp;
 		double prior[2];
-		int counter[2];
+		map<int, map<int, double> > pcp, ncp;
+		vector< vector< vector<double> > > Ptable;
+		vector<int> result, classCount, featureMax;
 };
 
 #endif

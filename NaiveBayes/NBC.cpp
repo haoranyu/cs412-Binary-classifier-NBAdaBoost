@@ -15,105 +15,105 @@ NBC::NBC(string name){
 	}
 }
 
-void NBC::train(const vector< vector<int> > & traindata, const vector<int> & trainlabel) {
-	this->counter[0] = this->counter[1] = 0;
+void NBC::train(const vector< vector<int> > & traindata, const vector<int> & train_label) {
+	for (int i =0; i < this->featureSize; i++) {
+		featureMax.push_back(0);
+	}
 
-	for (int j =0; j < this->featureSize; j++) {
-		map<int, double> temp[2];			
-		for (int i =0; i < traindata.size(); i++) {					
-			if (trainlabel[i] == 1) {
-				if (j == 0) counter[1]++;					
-				if (temp[1].count( traindata[i][j] )==0)
-					temp[1][traindata[i][j]] = double(1);
-				else 
-					temp[1][traindata[i][j]] += double(1); 
-
-				if (temp[0].count( traindata[i][j] )==0)
-					temp[0][traindata[i][j]] = double(0);
+	for (int i = 0; i < this->featureSize; i++) {
+		for (int j = 0; j < traindata.size(); j++) {
+			 if(traindata[j][i] > featureMax[i]){
+			 	featureMax[i] = traindata[j][i];
 			}
-			if (trainlabel[i] == -1) {
-				if (j == 0) counter[0]++;					
-				if (temp[0].count( traindata[i][j] )==0)
-					temp[0][traindata[i][j]] = double(1);
-				else 
-					temp[0][traindata[i][j]] += double(1); 
-
-				if (temp[1].count( traindata[i][j] )==0)
-					temp[1][traindata[i][j]] = double(0);
-			}		
 		}
-		bool null[2] = {false, false};
-		double tp = 0;
-		double tn = 0;
-	   
-		for (map<int,double>::iterator it = temp[1].begin(); it!=temp[1].end(); it++)	{
-		    if (it->second == 0) {
-		        null[1] = true;
-		        break;
-		    }
+	}
+
+	for (int j = 0; j < 2; j++) {
+		vector< vector<double> > init;
+		for (int i =0; i<this->featureSize; i++) {
+			vector<double> inner;
+			for (int k =0; k < featureMax[i]+1; k++) {
+				inner.push_back(0.0);
+			}	
+			init.push_back(inner);
 		}
+		this->Ptable.push_back(init);
+		this->classCount.push_back(0);
+	}
 
-		if (null[1] == true) {
-		    for (map<int,double>::iterator it = temp[1].begin(); it!=temp[1].end(); it++) {
-				temp[1][it->first] = double(temp[1][it->first]+1)/double(counter[1]+temp[1].size());
-				tp += it->second;
-		    }			
-		}		
 
-		if (null[1] == false) {
-		    for (map<int,double>::iterator it = temp[1].begin(); it!=temp[1].end(); it++) {
-		        temp[1][it->first] = double(temp[1][it->first])/double(counter[1]);
-		        tp += it->second;
-		    }
+	for (int j = 0; j < traindata.size(); j++) {
+		for (int i = 0; i < this->featureSize; i++) {
+			this->Ptable[train_label[j]][i][traindata[j][i]] += 1.0;
 		}
-
-		for (map<int,double>::iterator it = temp[0].begin(); it!=temp[0].end(); it++)	{
-		    if (it->second == 0) {
-			    null[0] = true;
-			    break;
-		    }
-		}
-
-		if (null[0] == true) {
-		    for(map<int,double>::iterator it = temp[0].begin(); it!=temp[0].end(); it++) {
-				temp[0][it->first] = double(temp[0][it->first]+1)/double(counter[0]+temp[0].size());
-				tn += it->second;
+		this->classCount[train_label[j]] ++;
+	}
+	
+	for (int j = 0; j < 2; j++) {
+		for (int i =0; i<this->featureSize; i++) {	
+			for(int f = 0; f < featureMax[i]+1; f++){
+				this->Ptable[j][i][f] = this->Ptable[j][i][f]/(double)classCount[j];
 			}
-		}		
-
-		if (null[0] == false)	{
-		    for (map<int,double>::iterator it = temp[0].begin(); it!=temp[0].end(); it++) {
-		        temp[0][it->first] = double(temp[0][it->first])/double(counter[0]);
-		        tn += it->second;
-		    }
 		}
-		
-		this->pcp[j] = temp[1];
-		this->ncp[j] = temp[0];		
-
+		prior[j] = ((double)this->classCount[j]/(double)traindata.size());
 	}
-	this->prior[1] = double(counter[1])/double(counter[1]+counter[0]);
-	this->prior[0] = double(counter[0])/double(counter[1]+counter[0]);
+	printPtable();
 }
 
-void NBC::test(const vector< vector<int> > & testdata ) {
-	for (int s = 0; s < testdata.size(); s++) {
-		this->result.push_back(judge(testdata[s]));
+void NBC::printPtable(){
+	ofstream fout("featureMax.txt");
+	fout<<"Table for -1"<<endl;
+	for (int i =0; i<this->featureSize; i++) {
+		for(int f = 0; f < featureMax[i]+1; f++){
+			fout<<this->Ptable[0][i][f]<<"\t";
+		}
+		fout<<endl;
+	}
+	fout<<"Table for +1"<<endl;
+	for (int i =0; i<this->featureSize; i++) {
+		for(int f = 0; f < featureMax[i]+1; f++){
+			fout<<this->Ptable[1][i][f]<<"\t";
+		}
+		fout<<endl;
 	}
 }
 
-
-int NBC::judge(const vector<int> &tuple) {
-	double P = log(prior[1]);
-	double N = log(prior[0]);
-
-	for(int i = 0; i < featureSize; i++){
-		P += log(pcp[i][tuple[i]]);
-		N += log(ncp[i][tuple[i]]);
-	}
-	if (P > N) return 1;
-	else return -1;
+void NBC::test(const vector< vector<int> > & data) {
+	for (int s = 0; s<data.size(); s++) {		
+		this->result.push_back(judge(data[s]));
+	}	
 }
+
+void NBC::calcuateMatrix(const vector<int> & label){
+	matrix[0][0] = matrix[0][1] = matrix[1][0] = matrix[1][1] =0;
+	for (int n = 0; n < this->result.size(); n++) {
+		this->matrix[label[n]][this->result[n]] +=1;
+	}
+}
+
+int NBC::judge(const vector<int> &sample) {
+
+    long double P[2];
+    for (int i = 0 ; i< 2; ++i){
+    	P[i] = log(this->prior[i]);
+		for(int f = 0; f < featureSize; ++f) {
+			long double pp;
+			if(sample[f] <= featureMax[f]){
+				pp = this->Ptable[i][f][sample[f]];
+				if (pp < 0.0000001)
+					pp = 0.0000001;
+				if (pp > 0.9999999)
+					pp = 0.9999999;
+			}
+			else{
+				pp = pp = 0.0000001;
+			}
+			P[i] += log(pp);
+		}
+	}
+	return P[0] > P[1] ? 0 : 1; 
+}
+
 
 void NBC::getTrainData(string path){
 	ifstream train(path.c_str());
@@ -130,7 +130,7 @@ void NBC::getTrainData(string path){
 			linestr >> cate;
 
 
-			this->trainlabel.push_back(cate);
+			this->train_label.push_back((cate < 0? 0:1));
 			string temp;
 			
 			for(int i = 0; i < this->featureSize; i++){
@@ -139,7 +139,7 @@ void NBC::getTrainData(string path){
 				int feature = atoi(temp.substr(0, pos).c_str());
 				int value = atoi(temp.substr(pos + 1, temp.length()).c_str());
 
-				while(feature != i && i < this->featureSize){
+				while(feature-1 != i && i < this->featureSize){
 					tuple.push_back(0);
 					i++;
 				}
@@ -168,7 +168,7 @@ void NBC::getTestData(string path){
 			int cate;
 			linestr >> cate;
 
-			this->testlabel.push_back(cate);
+			this->test_label.push_back((cate < 0? 0:1));
 			string temp;
 
 			for(int i = 0; i < this->featureSize; i++){
@@ -177,7 +177,7 @@ void NBC::getTestData(string path){
 				int feature = atoi(temp.substr(0, pos).c_str());
 				int value = atoi(temp.substr(pos + 1, temp.length()).c_str());
 
-				while(feature != i && i < this->featureSize){
+				while(feature-1 != i && i < this->featureSize){
 					tuple.push_back(0);
 					i++;
 				}
@@ -215,18 +215,4 @@ void NBC::printDetail(const vector<int> & label){
 	cout<<"F-1 Score: "<<f1<<endl;
 	cout<<"F-0.5 Score: "<<fhalf<<"\t";
 	cout<<"F-2 Score: "<<f2<<endl;
-}
-
-void NBC::calcuateMatrix(const vector<int> & label){
-	matrix[0][0] = matrix[0][1] = matrix[1][0] = matrix[1][1] =0;
-	for (int n = 0; n < this->result.size(); n++) {
-		if(label[n] == 1 && result[n] == 1) 
-			matrix[1][1]++;
-		if(label[n] == -1 && result[n] == -1)
-			matrix[0][0]++;
-		if(label[n] == -1 && result[n] == 1)
-			matrix[0][1]++;
-		if(label[n] == 1 && result[n] == -1)
-			matrix[1][0]++;
-	}
 }

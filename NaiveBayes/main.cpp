@@ -1,6 +1,7 @@
 #include "NBC.h"
+
 int main(int argc, char* argv[]) {
-		
+
 	if (argc != 3){
 			cout<< "Use format: ./NaiveBayes training_file test_file" << endl;
 			exit(1);
@@ -14,12 +15,18 @@ int main(int argc, char* argv[]) {
 	nbc.getTrainData(train);
 	nbc.getTestData(test);
 
-	nbc.train(nbc.trainset, nbc.trainlabel);
-	nbc.test(nbc.trainset);
-	nbc.printBasic(nbc.trainlabel);
-	nbc.printDetail(nbc.trainlabel);
+	nbc.train(nbc.trainset, nbc.train_label);
 	nbc.test(nbc.testset);
-	nbc.printBasic(nbc.testlabel);
-	nbc.printDetail(nbc.testlabel);
+	nbc.printBasic(nbc.test_label);
+	nbc.printDetail(nbc.test_label);
+
+	NBC nbc2((string)argv[1]);
+	nbc2.getTrainData(train);
+	nbc2.getTestData(train);
+
+	nbc2.train(nbc2.trainset, nbc2.train_label);
+	nbc2.test(nbc2.testset);
+	nbc2.printBasic(nbc2.test_label);
+	nbc2.printDetail(nbc2.test_label);
 
 }

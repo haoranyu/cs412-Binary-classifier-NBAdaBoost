@@ -10,41 +10,31 @@
 #include <iostream>
 #include <iomanip>	
 #include <map>
-#include <list>
 using namespace std;
-#define NUM_CLASS 2
 
-class AB
-{
+class AB {
 	public:
-		
-		void Train(vector< vector<string> > & traindata,  vector<int> & ltrain);
+		AB(string name);
+		void train(const vector< vector<int> > & traindata, const vector<int> & train_label);
+		void test(const vector< vector<int> > & testdata);
+		void getTrainData(string path);
+		void getTestData(string path);
+		void printBasic(const vector<int> & label);
+		void printDetail(const vector<int> & label);
+		void printPtable();
 
-		void Sample();
-		void normalize(); 
+		vector< vector<int> >	trainset, testset;
+		vector<int> train_label, test_label;
 
-		void Test( vector< vector<string> > & testdata, vector<int> & ltest); 
-		int test(const vector<string> &sample);
-
-
-		vector< vector<string> >	trainset, testset ;
-
-		vector<int> ltrain, ltest, pltest;
-
-		vector< vector<string> >	sampleset;
-		vector<int> lsample;
-		vector<int> sample_map;
-		vector<double> weight;
-
-
-		map<string, vector<double> > pTable;
-		map<string, vector<int> > features;
-		
-		double prior[NUM_CLASS];
-		long 	numw_inclass[NUM_CLASS];
-	
 	private:
-
+		void calcuateMatrix(const vector<int> & label);
+		int judge(const vector<int> &sample);
+		int featureSize;
+		int matrix[2][2];
+		double prior[2];
+		map<int, map<int, double> > pcp, ncp;
+		vector< vector< vector<double> > > Ptable;
+		vector<int> result, classCount, featureMax;
 };
 
 #endif

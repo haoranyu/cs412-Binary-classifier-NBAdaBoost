@@ -1,86 +1,212 @@
 #include "NBC.h"
-void NBC::Train( map< std::pair<int, int>, int > & fTable_p, map< std::pair<int, int>, int > & fTable_n, vector<int> & ltrain)
-{
-	int train_size = ltrain.size();
-	int train_cate_size[NUM_CLASS];
 
-	for(int i=0; i < NUM_CLASS; i++)
-		train_cate_size[i] = 0;
-	
-
-	for (vector<int>::iterator it = ltrain.begin() ; it != ltrain.end(); ++it){
-		train_cate_size[*it]++;
+NBC::NBC(string name){
+	if(name == "a1a.train"){
+		this->featureSize = (123);
 	}
-
-	for(int i = 0; i < NUM_CLASS; i++){
-		this->prior[i] = (double)train_cate_size[i]/(double)train_size;
+	else if(name == "breast_cancer.train"){
+		this->featureSize = (9);
 	}
-
-	for (std::map< std::pair<int, int>, int > ::iterator it = fTable_p.begin(); it != fTable_p.end(); ++it){
-        vector<double> init;
-        for (int i =0; i < NUM_CLASS; i++) {        
-            init.push_back(0);
-        }
-        pTable.insert ( std::pair<std::pair<int, int>,vector<double> >(it->first, init) );
-    }
-
-	for (std::map<std::pair<int, int>, vector<double> >::iterator it = pTable.begin(); it != pTable.end(); ++it){
-        (it->second).at(1) = (double)(fTable_p[it->first] + 1) / (double)(cate_size_train[1]);
-        (it->second).at(0) = (double)(fTable_n[it->first] + 1) / (double)(cate_size_train[0]);
-    }
+	else if(name == "led.train"){
+		this->featureSize = (7);
+	}
+	else if(name == "poker.train"){
+		this->featureSize = (10);
+	}
 }
 
-void NBC::Test( vector< vector<int> > & data, vector<int> & ltest){
-	int test_size = ltest.size();
-	int confusion_matrix[NUM_CLASS][NUM_CLASS];
+void NBC::train(const vector< vector<int> > & traindata, const vector<int> & trainlabel) {
+	this->counter[0] = this->counter[1] = 0;
 
-	for(int i = 0; i < NUM_CLASS; i++){
-		for(int j = 0; j < NUM_CLASS; j++){
-			confusion_matrix[i][j] = 0;
+	for (int j =0; j < this->featureSize; j++) {
+		map<int, double> temp[2];			
+		for (int i =0; i < traindata.size(); i++) {					
+			if (trainlabel[i] == 1) {
+				if (j == 0) counter[1]++;					
+				if (temp[1].count( traindata[i][j] )==0)
+					temp[1][traindata[i][j]] = double(1);
+				else 
+					temp[1][traindata[i][j]] += double(1); 
+
+				if (temp[0].count( traindata[i][j] )==0)
+					temp[0][traindata[i][j]] = double(0);
+			}
+			if (trainlabel[i] == -1) {
+				if (j == 0) counter[0]++;					
+				if (temp[0].count( traindata[i][j] )==0)
+					temp[0][traindata[i][j]] = double(1);
+				else 
+					temp[0][traindata[i][j]] += double(1); 
+
+				if (temp[1].count( traindata[i][j] )==0)
+					temp[1][traindata[i][j]] = double(0);
+			}		
+		}
+		bool null[2] = {false, false};
+		double tp = 0;
+		double tn = 0;
+	   
+		for (map<int,double>::iterator it = temp[1].begin(); it!=temp[1].end(); it++)	{
+		    if (it->second == 0) {
+		        null[1] = true;
+		        break;
+		    }
+		}
+
+		if (null[1] == true) {
+		    for (map<int,double>::iterator it = temp[1].begin(); it!=temp[1].end(); it++) {
+				temp[1][it->first] = double(temp[1][it->first]+1)/double(counter[1]+temp[1].size());
+				tp += it->second;
+		    }			
+		}		
+
+		if (null[1] == false) {
+		    for (map<int,double>::iterator it = temp[1].begin(); it!=temp[1].end(); it++) {
+		        temp[1][it->first] = double(temp[1][it->first])/double(counter[1]);
+		        tp += it->second;
+		    }
+		}
+
+		for (map<int,double>::iterator it = temp[0].begin(); it!=temp[0].end(); it++)	{
+		    if (it->second == 0) {
+			    null[0] = true;
+			    break;
+		    }
+		}
+
+		if (null[0] == true) {
+		    for(map<int,double>::iterator it = temp[0].begin(); it!=temp[0].end(); it++) {
+				temp[0][it->first] = double(temp[0][it->first]+1)/double(counter[0]+temp[0].size());
+				tn += it->second;
+			}
+		}		
+
+		if (null[0] == false)	{
+		    for (map<int,double>::iterator it = temp[0].begin(); it!=temp[0].end(); it++) {
+		        temp[0][it->first] = double(temp[0][it->first])/double(counter[0]);
+		        tn += it->second;
+		    }
+		}
+		
+		this->pcp[j] = temp[1];
+		this->ncp[j] = temp[0];		
+
+	}
+	this->prior[1] = double(counter[1])/double(counter[1]+counter[0]);
+	this->prior[0] = double(counter[0])/double(counter[1]+counter[0]);
+}
+
+void NBC::test(const vector< vector<int> > & testdata ) {
+	for (int s = 0; s < testdata.size(); s++) {
+		this->result.push_back(judge(testdata[s]));
+	}
+}
+
+
+int NBC::judge(const vector<int> &tuple) {
+	double P = log(prior[1]);
+	double N = log(prior[0]);
+
+	for(int i = 0; i < featureSize; i++){
+		P += log(pcp[i][tuple[i]]);
+		N += log(ncp[i][tuple[i]]);
+	}
+	if (P > N) return 1;
+	else return -1;
+}
+
+void NBC::getTrainData(string path){
+	ifstream train(path.c_str());
+	if(train.is_open()) {
+		string line;			
+		while (!train.eof()){
+			getline(train, line, '\n');
+
+			if(line == "") break;
+			istringstream linestr(line);
+		
+			vector<int> tuple;
+			int cate;
+			linestr >> cate;
+
+
+			this->trainlabel.push_back(cate);
+			string temp;
+			
+			for(int i = 0; i < this->featureSize; i++){
+				linestr >> temp;
+				int pos = temp.find(":");
+				int feature = atoi(temp.substr(0, pos).c_str());
+				int value = atoi(temp.substr(pos + 1, temp.length()).c_str());
+
+				while(feature != i && i < this->featureSize){
+					tuple.push_back(0);
+					i++;
+				}
+
+				if( i >= this->featureSize) break;
+
+				tuple.push_back(value);
+			}
+
+			this->trainset.push_back(tuple);						
 		}
 	}
+	train.close();
+}
+void NBC::getTestData(string path){
+	ifstream test(path.c_str());
+	if(test.is_open()) {
+		string line;			
+		while (!test.eof()){
+			getline(test, line, '\n');
 
-	for (int s = 0; s < test_size; s++) {
-		int plabel = test(data[s]);
-		this->pltest.push_back(plabel);
-		confusion_matrix[ltest.at(s)][plabel]++;
-	}
-	
-	int rowSum[NUM_CLASS];
+			if(line == "") break;
+			istringstream linestr(line);
+		
+			vector<int> tuple;
+			int cate;
+			linestr >> cate;
 
-	for(int i = 0; i < NUM_CLASS; i ++){
-		rowSum[i] = 0;
-	}
+			this->testlabel.push_back(cate);
+			string temp;
 
-	for(int i = 0; i < NUM_CLASS; i ++){
-		for(int j = 0; j < NUM_CLASS; j ++){
-			rowSum[i] += confusion_matrix[i][j];
+			for(int i = 0; i < this->featureSize; i++){
+				linestr >> temp;
+				int pos = temp.find(":");
+				int feature = atoi(temp.substr(0, pos).c_str());
+				int value = atoi(temp.substr(pos + 1, temp.length()).c_str());
+
+				while(feature != i && i < this->featureSize){
+					tuple.push_back(0);
+					i++;
+				}
+
+				if( i >= this->featureSize) break;
+
+				tuple.push_back(value);
+			}
+			this->testset.push_back(tuple);						
 		}
 	}
+	test.close();
+}
 
-	cout<<"The confusion matrix:"<<endl;
-	for(int i = 0; i < NUM_CLASS; i ++){
-		for(int j = 0; j < NUM_CLASS; j ++){
-			cout<<confusion_matrix[i][j]<<"\t";
-		}
-		cout<<endl;
-	}
-
-	cout<<confusion_matrix[1][1]<<" "<<confusion_matrix[1][0]<<" "<<confusion_matrix[0][1]<<" "<<confusion_matrix[0][0]<<endl;
-
-	double 	accuracy = (double)(confusion_matrix[1][1] + confusion_matrix[0][0]) / (double)(confusion_matrix[1][1] + confusion_matrix[0][0] + confusion_matrix[1][0] + confusion_matrix[0][1]), 
-	 		error = (double)(confusion_matrix[0][1] + confusion_matrix[1][0]) / (double)(confusion_matrix[1][1] + confusion_matrix[0][0] + confusion_matrix[1][0] + confusion_matrix[0][1]), 
-			sensitivity = (double)(confusion_matrix[1][1]) / (double)(confusion_matrix[1][1] + confusion_matrix[1][0]), 
-			specificity = (double)(confusion_matrix[0][0]) / (double)(confusion_matrix[0][0] + confusion_matrix[0][1]),
-			precision = (double)(confusion_matrix[1][1]) / (double)(confusion_matrix[1][1] + confusion_matrix[0][1]);
+void NBC::printBasic(const vector<int> & label){
+	this->calcuateMatrix(label);
+	cout<<matrix[1][1]<<" "<<matrix[1][0]<<" "<<matrix[0][1]<<" "<<matrix[0][0]<<endl;
+}
+void NBC::printDetail(const vector<int> & label){
+	this->calcuateMatrix(label);
+	double 	accuracy = (double)(matrix[1][1] + matrix[0][0]) / (double)(matrix[1][1] + matrix[0][0] + matrix[1][0] + matrix[0][1]), 
+	 		error = (double)(matrix[0][1] + matrix[1][0]) / (double)(matrix[1][1] + matrix[0][0] + matrix[1][0] + matrix[0][1]), 
+			sensitivity = (double)(matrix[1][1]) / (double)(matrix[1][1] + matrix[1][0]), 
+			specificity = (double)(matrix[0][0]) / (double)(matrix[0][0] + matrix[0][1]),
+			precision = (double)(matrix[1][1]) / (double)(matrix[1][1] + matrix[0][1]);
 	double 	&recall = sensitivity,
 			f1 = 2 * (precision * recall) / (precision + recall),
 			fhalf = (1 + 0.5*0.5) * (precision * recall) / (0.5*0.5 * precision + recall),
 			f2 = (1 + 2*2) * (precision * recall) / (2*2 * precision + recall);
-
-	// //cout<< accuracy <<" "<< error <<" "<< sensitivity <<" "<< specificity <<endl;
-	// //cout<< precision <<" "<< f1 <<" "<< fhalf <<" "<< f2 <<endl;
-
 	cout<<"Accuracy: "<<accuracy<<"\t\t";
 	cout<<"Error Rate: "<<error<<endl;
 	cout<<"Sensitivity: "<<sensitivity<<"\t";
@@ -89,31 +215,18 @@ void NBC::Test( vector< vector<int> > & data, vector<int> & ltest){
 	cout<<"F-1 Score: "<<f1<<endl;
 	cout<<"F-0.5 Score: "<<fhalf<<"\t";
 	cout<<"F-2 Score: "<<f2<<endl;
-
 }
 
-int NBC::test(const vector<int> &tuple) {
-
-    vector<double> posterior;
-	double P[NUM_CLASS];
-	for (int i = 0 ; i < NUM_CLASS; ++i){
-		P[i] = log(this->prior[i]);
-		//cout<<"P("<<this->prior[i]<<") and "<<P[i]<<endl;
+void NBC::calcuateMatrix(const vector<int> & label){
+	matrix[0][0] = matrix[0][1] = matrix[1][0] = matrix[1][1] =0;
+	for (int n = 0; n < this->result.size(); n++) {
+		if(label[n] == 1 && result[n] == 1) 
+			matrix[1][1]++;
+		if(label[n] == -1 && result[n] == -1)
+			matrix[0][0]++;
+		if(label[n] == -1 && result[n] == 1)
+			matrix[0][1]++;
+		if(label[n] == 1 && result[n] == -1)
+			matrix[1][0]++;
 	}
-	for (int i = 0 ; i < NUM_CLASS; ++i){
-		for(int f = 0; f < tuple.size(); ++f) {
-			double pUnseen = (1.0f/(double)(cate_size_train[i] + cate_size_train[1] +  cate_size_train[0]));
-			double pp;
-			if(pTable.count(make_pair(f+1,tuple[f])) > 0){
-				pp = this->pTable[std::make_pair(f+1,tuple[f])].at(i);
-			}
-			else{
-				pp = pUnseen;
-			}
-			P[i] += log(pp);
-		}
-	}   
-
-	return P[0] > P[1] ? 0:1; 
-
 }

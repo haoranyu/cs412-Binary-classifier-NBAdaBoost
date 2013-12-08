@@ -12,28 +12,28 @@
 #include <map>
 #include <list>
 using namespace std;
-#define NUM_CLASS 2
 
-class NBC
-{
+class NBC {
 	public:
+		NBC(string name);
+		void train(const vector< vector<int> > & traindata, const vector<int> & trainlabel);
+		void test(const vector< vector<int> > & testdata);
+		void getTrainData(string path);
+		void getTestData(string path);
+		void printBasic(const vector<int> & label);
+		void printDetail(const vector<int> & label);
 		
-		void Train( map< std::pair<int, int>, int > & fTable_p, map< std::pair<int, int>, int > & fTable_n, vector<int> & ltrain);
-		void Test( vector< vector<int> > & testdata, vector<int> & ltest); 
-		int test(const vector<int> &tuple);
-
-		int featureSize;
-
-		vector<int> ltrain, ltest, pltest;
-		map< std::pair<int, int>, int > fTable_p_train, fTable_n_train, fTable_test;
-		map< std::pair<int, int>, vector<double> > pTable;
-		int cate_size_train[2];
-
-		vector< vector<int> > 	trainset, testset ;
-		double prior[NUM_CLASS];
+		vector< vector<int> >	trainset, testset;
+		vector<int> trainlabel, testlabel, result;
 		
 	private:
-
+		int judge(const vector<int> &sample);
+		void calcuateMatrix(const vector<int> & label);
+		int featureSize;
+		int matrix[2][2];
+		map<int, map<int, double> > pcp, ncp;
+		double prior[2];
+		int counter[2];
 };
 
 #endif

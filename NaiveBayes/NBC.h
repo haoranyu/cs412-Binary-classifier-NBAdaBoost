@@ -18,20 +18,20 @@ class NBC
 {
 	public:
 		
-		void Train(vector< vector<string> > & traindata,  vector<int> & ltrain);
-		void Test( vector< vector<string> > & testdata, vector<int> & ltest); 
-		int test(const vector<string> &sample);
+		void Train( map< std::pair<int, int>, int > & fTable_p, map< std::pair<int, int>, int > & fTable_n, vector<int> & ltrain);
+		void Test( vector< vector<int> > & testdata, vector<int> & ltest); 
+		int test(const vector<int> &tuple);
 
-
-		vector< vector<string> >	trainset, testset ;
+		int featureSize;
 
 		vector<int> ltrain, ltest, pltest;
-		map<string, vector<double> > pTable;
-		map<string, vector<int> > features;
-		
+		map< std::pair<int, int>, int > fTable_p_train, fTable_n_train, fTable_test;
+		map< std::pair<int, int>, vector<double> > pTable;
+		int cate_size_train[2];
+
+		vector< vector<int> > 	trainset, testset ;
 		double prior[NUM_CLASS];
-		long 	numw_inclass[NUM_CLASS];
-	
+		
 	private:
 
 };

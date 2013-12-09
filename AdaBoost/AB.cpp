@@ -1,5 +1,5 @@
 #include "AB.h"
-
+#define K 10
 AB::AB(string name){
 	if(name == "a1a.train"){
 		this->featureSize = (123);
@@ -15,15 +15,124 @@ AB::AB(string name){
 	}
 }
 
-void AB::train(const vector< vector<int> > & traindata, const vector<int> & train_label) {
-	for (int i =0; i < this->featureSize; i++) {
-		featureMax.push_back(0);
+void AB::rewieght(int size){
+	double sumWeight = 0;
+	for(int i = 0; i < size; i++){
+		sumWeight += this->weight[i];
 	}
+	for(int i = 0; i < size; i++){
+		this->weight[i] = this->weight[i] / (double)sumWeight;
+	}
+}
+
+void AB::sampling(const vector< vector<int> > & data, vector<double> & weight , vector<int>& label) {
+    vector< vector<int> >  temp;
+	vector<int> ltmp;
+
+    label.clear();
+    double n =0;
+	double rn =0;
+    for (int i =0; i<data.size(); i++) {
+		rn = rand() / double(RAND_MAX);
+		n = 0;
+		for (int j =0; j<data.size(); j++) {
+			n+= weight[j];
+			if (n > rn)	{
+				temp.push_back(data[j]);
+				ltmp.push_back(label[j]);
+				break;
+			}
+		}
+    } 
+    this->sampleset = temp;
+    this->sample_label = ltmp;
+}
+
+void AB::updateWeight(double error, int k){
+	vector<double>	temp_weight;
+	for (int i = 0; i < this->sample_label.size(); i++) {
+	 	if(this->sample_label[i] != this->result[k][i]){
+	 		temp_weight.push_back( this->weight[i] * error / (1.0f-error));
+	 	}
+	 	else{
+	 		temp_weight.push_back( this->weight[i]);
+	 	}
+	}
+	this->weight.clear();
+	this->weight = temp_weight;
+}
+
+void AB::adaBoostTrain(const vector< vector<int> > & data, vector<int> & label){
+	for(int i = 0; i < label.size(); i++){
+		this->weight.push_back(1);
+	}
+	rewieght(label.size());
+
+	for(int k = 0; k < K; k++){
+		vector<int> init;
+		for (int i = 0; i < this->sample_label.size(); i++)
+			init.push_back(0);
+		this->result.push_back(init);
+	}
+
+	for(int k = 0; k < K; k++){
+		sampling(data, this->weight ,label);
+		train(this->sampleset, this->sample_label, k);
+		test(this->sampleset, k);
+		computeError(k);
+		if(this->error[k] > 0.5){
+			this->Ptable.pop_back();
+			this->error.pop_back();
+			this->featureMax.pop_back();
+			k--;
+			continue;
+		}
+		updateWeight(this->error[k] ,k);
+		rewieght(label.size());
+	}
+}
+
+int AB::adaBoostJudge(const vector<int> &sample){
+	double classWeight[2] = {0.0f,0.0f};
+	for(int k = 0; k < K; k++){
+		double w_i = ((1.0f - this->error[k])/this->error[k]);
+		int pred = judge(sample, k);
+		classWeight[pred] += w_i;
+	}
+	return classWeight[0] > classWeight[1]? 0 : 1;
+}
+
+void AB::adaBoostTest(const vector< vector<int> > & data) {
+	this->adaResult.clear();
+	for (int s = 0; s<data.size(); s++) {		
+		this->adaResult.push_back(adaBoostJudge(data[s]));
+	}
+}
+
+void AB::computeError(int k){
+	double temp_error = 0.0f;
+	for(int i = 0; i < this->sampleset.size(); i++){
+		if(this->sample_label[i] != this->result[k][i]){
+			temp_error += this->weight[i];
+		}
+	}
+	this->error.push_back(temp_error);
+}
+
+
+void AB::train(const vector< vector<int> > & traindata, const vector<int> & train_label, int k) {
+	this->classCount.clear();
+	vector<int> init;
+	vector<vector<vector<double> > > Ptable_k;
+	for (int i =0; i < this->featureSize; i++) {
+		init.push_back(0);
+	}
+	featureMax.push_back(init);
 
 	for (int i = 0; i < this->featureSize; i++) {
 		for (int j = 0; j < traindata.size(); j++) {
-			 if(traindata[j][i] > featureMax[i]){
-			 	featureMax[i] = traindata[j][i];
+			 if(traindata[j][i] > featureMax[k][i]){
+			 	featureMax[k][i] = traindata[j][i];
 			}
 		}
 	}
@@ -32,81 +141,66 @@ void AB::train(const vector< vector<int> > & traindata, const vector<int> & trai
 		vector< vector<double> > init;
 		for (int i =0; i<this->featureSize; i++) {
 			vector<double> inner;
-			for (int k =0; k < featureMax[i]+1; k++) {
+			for (int h =0; h < featureMax[k][i]+1; h++) {
 				inner.push_back(0.0);
 			}	
 			init.push_back(inner);
 		}
-		this->Ptable.push_back(init);
+		
+		Ptable_k.push_back(init);
+
 		this->classCount.push_back(0);
 	}
 
 
 	for (int j = 0; j < traindata.size(); j++) {
 		for (int i = 0; i < this->featureSize; i++) {
-			this->Ptable[train_label[j]][i][traindata[j][i]] += 1.0;
+			Ptable_k[train_label[j]][i][traindata[j][i]] += 1.0;
 		}
 		this->classCount[train_label[j]] ++;
 	}
 	
 	for (int j = 0; j < 2; j++) {
 		for (int i =0; i<this->featureSize; i++) {	
-			for(int f = 0; f < featureMax[i]+1; f++){
-				this->Ptable[j][i][f] = this->Ptable[j][i][f]/(double)classCount[j];
+			for(int f = 0; f < featureMax[k][i]+1; f++){
+				Ptable_k[j][i][f] = Ptable_k[j][i][f]/(double)classCount[j];
 			}
 		}
-		prior[j] = ((double)this->classCount[j]/(double)traindata.size());
+		prior[k][j] = ((double)this->classCount[j]/(double)traindata.size());
 	}
-	printPtable();
+	this->Ptable.push_back(Ptable_k);
 }
 
-void AB::printPtable(){
-	ofstream fout("featureMax.txt");
-	fout<<"Table for -1"<<endl;
-	for (int i =0; i<this->featureSize; i++) {
-		for(int f = 0; f < featureMax[i]+1; f++){
-			fout<<this->Ptable[0][i][f]<<"\t";
-		}
-		fout<<endl;
-	}
-	fout<<"Table for +1"<<endl;
-	for (int i =0; i<this->featureSize; i++) {
-		for(int f = 0; f < featureMax[i]+1; f++){
-			fout<<this->Ptable[1][i][f]<<"\t";
-		}
-		fout<<endl;
-	}
-}
-
-void AB::test(const vector< vector<int> > & data) {
+void AB::test(const vector< vector<int> > & data, int k) {
+	this->result[k].clear();
 	for (int s = 0; s<data.size(); s++) {		
-		this->result.push_back(judge(data[s]));
-	}	
+		this->result[k].push_back(judge(data[s], k));
+	}
 }
 
 void AB::calcuateMatrix(const vector<int> & label){
 	matrix[0][0] = matrix[0][1] = matrix[1][0] = matrix[1][1] =0;
-	for (int n = 0; n < this->result.size(); n++) {
-		this->matrix[label[n]][this->result[n]] +=1;
+	for (int n = 0; n < this->adaResult.size(); n++) {
+		this->matrix[label[n]][this->adaResult[n]] +=1;
 	}
 }
 
-int AB::judge(const vector<int> &sample) {
+int AB::judge(const vector<int> &sample, int k) {
 
     long double P[2];
     for (int i = 0 ; i< 2; ++i){
-    	P[i] = log(this->prior[i]);
+    	P[i] = log(this->prior[k][i]);
 		for(int f = 0; f < featureSize; ++f) {
 			long double pp;
-			if(sample[f] <= featureMax[f]){
-				pp = this->Ptable[i][f][sample[f]];
+			if(sample[f] <= featureMax[k][f]){
+				pp = this->Ptable[k][i][f][sample[f]];
 				if (pp < 0.0000001)
 					pp = 0.0000001;
 				if (pp > 0.9999999)
 					pp = 0.9999999;
 			}
 			else{
-				pp = pp = 0.0000001;
+				pp = 0.0000001;
 			}
 			P[i] += log(pp);
 		}

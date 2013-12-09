@@ -16,17 +16,12 @@ int main(int argc, char* argv[]) {
 	nbc.getTestData(test);
 
 	nbc.train(nbc.trainset, nbc.train_label);
-	nbc.test(nbc.testset);
-	nbc.printBasic(nbc.test_label);
-	nbc.printDetail(nbc.test_label);
+	ab.test(ab.testset);
+	ab.printBasic(ab.test_label);
+	ab.printDetail(ab.test_label);
 
-	NBC nbc2((string)argv[1]);
-	nbc2.getTrainData(train);
-	nbc2.getTestData(train);
-
-	nbc2.train(nbc2.trainset, nbc2.train_label);
-	nbc2.test(nbc2.testset);
-	nbc2.printBasic(nbc2.test_label);
-	nbc2.printDetail(nbc2.test_label);
+	ab.test(ab.trainset);
+	ab.printBasic(ab.train_label);
+	ab.printDetail(ab.train_label);
 
 }

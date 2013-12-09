@@ -79,6 +79,7 @@ void NBC::printPtable(){
 }
 
 void NBC::test(const vector< vector<int> > & data) {
+	this->result.clear();
 	for (int s = 0; s<data.size(); s++) {		
 		this->result.push_back(judge(data[s]));
 	}	

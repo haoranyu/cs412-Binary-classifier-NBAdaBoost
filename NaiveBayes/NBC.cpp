@@ -1,16 +1,16 @@
 #include "NBC.h"
 
 NBC::NBC(string name){
-	if(name == "a1a.train"){
+	if(name == "a1a.train" || name == "a1a.test"){
 		this->featureSize = (123);
 	}
-	else if(name == "breast_cancer.train"){
+	else if(name == "breast_cancer.train" || name == "breast_cancer.test"){
 		this->featureSize = (9);
 	}
-	else if(name == "led.train"){
+	else if(name == "led.train" || name == "led.test"){
 		this->featureSize = (7);
 	}
-	else if(name == "poker.train"){
+	else if(name == "poker.train" || name == "poker.test"){
 		this->featureSize = (10);
 	}
 }
@@ -52,7 +52,7 @@ void NBC::train(const vector< vector<int> > & traindata, const vector<int> & tra
 	for (int j = 0; j < 2; j++) {
 		for (int i =0; i<this->featureSize; i++) {	
 			for(int f = 0; f < featureMax[i]+1; f++){
-				this->Ptable[j][i][f] = this->Ptable[j][i][f]/(double)classCount[j];
+				this->Ptable[j][i][f] = (this->Ptable[j][i][f])/(double)classCount[j];
 			}
 		}
 		prior[j] = ((double)this->classCount[j]/(double)traindata.size());
@@ -103,11 +103,9 @@ int NBC::judge(const vector<int> &sample) {
 				pp = this->Ptable[i][f][sample[f]];
 				if (pp < 0.0000001)
 					pp = 0.0000001;
-				if (pp > 0.9999999)
-					pp = 0.9999999;
 			}
 			else{
-				pp = pp = 0.0000001;
+				pp = 0.0000001;
 			}
 			P[i] += log(pp);
 		}

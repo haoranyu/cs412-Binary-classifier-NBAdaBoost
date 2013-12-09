@@ -1,16 +1,16 @@
 #include "AB.h"
-#define K 10
+#define K 7
 AB::AB(string name){
-	if(name == "a1a.train"){
+	if(name == "a1a.train" || name == "a1a.test"){
 		this->featureSize = (123);
 	}
-	else if(name == "breast_cancer.train"){
+	else if(name == "breast_cancer.train" || name == "breast_cancer.test"){
 		this->featureSize = (9);
 	}
-	else if(name == "led.train"){
+	else if(name == "led.train" || name == "led.test"){
 		this->featureSize = (7);
 	}
-	else if(name == "poker.train"){
+	else if(name == "poker.train" || name == "poker.test"){
 		this->featureSize = (10);
 	}
 }
@@ -196,8 +196,6 @@ int AB::judge(const vector<int> &sample, int k) {
 				pp = this->Ptable[k][i][f][sample[f]];
 				if (pp < 0.0000001)
 					pp = 0.0000001;
-				if (pp > 0.9999999)
-					pp = 0.9999999;
 			}
 			else{
 				pp = 0.0000001;

@@ -10,7 +10,7 @@
 #include <iostream>
 #include <iomanip>	
 #include <map>
-#define K 10
+#define K 7
 using namespace std;
 
 class AB {

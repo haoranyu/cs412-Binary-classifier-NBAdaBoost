@@ -16,14 +16,13 @@ int main(int argc, char* argv[]) {
 	ab.getTestData(test);
 
 	ab.adaBoostTrain(ab.trainset, ab.train_label);
+
 	ab.adaBoostTest(ab.trainset);
-	//ab.test(ab.testset);
 	ab.printBasic(ab.train_label);
 	ab.printDetail(ab.train_label);
 
-	// ab.test(ab.trainset);
-	// ab.printBasic(ab.train_label);
-	// ab.printDetail(ab.train_label);
-
+	ab.adaBoostTest(ab.testset);
+	ab.printBasic(ab.test_label);
+	ab.printDetail(ab.test_label);
 
 }

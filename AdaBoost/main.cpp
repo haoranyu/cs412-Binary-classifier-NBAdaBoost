@@ -7,10 +7,10 @@ int main(int argc, char* argv[]) {
 			exit(1);
 	}
 
-	string train = "data/"+(string)argv[1];
-	string test = "data/"+(string)argv[2];
+	string train = (string)argv[1];
+	string test = (string)argv[2];
 
-	AB ab((string)argv[1]);
+	AB ab(train);
 
 	ab.getTrainData(train);
 	ab.getTestData(test);

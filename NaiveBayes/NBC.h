@@ -10,6 +10,7 @@
 #include <iostream>
 #include <iomanip>	
 #include <map>
+#include <set>
 using namespace std;
 
 class NBC {

@@ -1,18 +1,24 @@
 #include "AB.h"
 #define K 7
 AB::AB(string name){
-	if(name == "a1a.train" || name == "a1a.test"){
-		this->featureSize = (123);
+	ifstream filein(name.c_str());
+	set<int> features;
+	if(filein.is_open()) {
+		string line;
+		while (!filein.eof()){
+			getline(filein, line, '\n');
+			if(line == "") break;
+			istringstream linestr(line);
+			int cate;
+			linestr >> cate;
+			string temp;
+			while(linestr >> temp){
+				features.insert(atoi(temp.substr(0, temp.find(":")).c_str()));
+			}
+		}
 	}
-	else if(name == "breast_cancer.train" || name == "breast_cancer.test"){
-		this->featureSize = (9);
-	}
-	else if(name == "led.train" || name == "led.test"){
-		this->featureSize = (7);
-	}
-	else if(name == "poker.train" || name == "poker.test"){
-		this->featureSize = (10);
-	}
+	filein.close();
+	this->featureSize = (*features.rbegin());
 }
 
 void AB::rewieght(int size){

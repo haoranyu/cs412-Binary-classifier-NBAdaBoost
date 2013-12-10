@@ -19,10 +19,10 @@ int main(int argc, char* argv[]) {
 
 	nbc.test(nbc.trainset);
 	nbc.printBasic(nbc.train_label);
-	nbc.printDetail(nbc.train_label);
+	//nbc.printDetail(nbc.train_label);
 
 	nbc.test(nbc.testset);
 	nbc.printBasic(nbc.test_label);
-	nbc.printDetail(nbc.test_label);
+	//nbc.printDetail(nbc.test_label);
 
 }

@@ -19,10 +19,10 @@ int main(int argc, char* argv[]) {
 
 	ab.adaBoostTest(ab.trainset);
 	ab.printBasic(ab.train_label);
-	ab.printDetail(ab.train_label);
+	//ab.printDetail(ab.train_label);
 
 	ab.adaBoostTest(ab.testset);
 	ab.printBasic(ab.test_label);
-	ab.printDetail(ab.test_label);
+	//ab.printDetail(ab.test_label);
 
 }
